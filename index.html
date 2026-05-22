@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NASA APOD Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #081b2a;
+      color: #f0f7ff;
+      min-height: 100vh;
+    }
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .meta {
+      text-align: center;
+      color: #a3c4eb;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    .media {
+      width: 100%;
+      max-height: 560px;
+      object-fit: cover;
+      display: block;
+    }
+    .content {
+      padding: 24px;
+    }
+    .explanation {
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+    .status {
+      text-align: center;
+      margin-top: 18px;
+      color: #d2e3ff;
+    }
+    button {
+      display: block;
+      margin: 16px auto;
+      padding: 12px 18px;
+      font-size: 16px;
+      border: none;
+      border-radius: 999px;
+      background: #4078f2;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #5b8efa;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>NASA Astronomy Picture of the Day</h1>
+    <p class="meta">Using NASA's APOD API with the public demo key.</p>
+    <button id="refresh">Load Today’s APOD</button>
+    <div class="card" id="apodCard" style="display:none;">
+      <div id="mediaContainer"></div>
+      <div class="content">
+        <h2 id="title"></h2>
+        <p class="meta" id="date"></p>
+        <p class="explanation" id="explanation"></p>
+        <p class="status" id="copyright"></p>
+      </div>
+    </div>
+    <p class="status" id="status">Click the button to load the APOD.</p>
+  </div>
+
+  <script>
+    const button = document.getElementById('refresh');
+    const status = document.getElementById('status');
+    const apodCard = document.getElementById('apodCard');
+    const mediaContainer = document.getElementById('mediaContainer');
+    const titleEl = document.getElementById('title');
+    const dateEl = document.getElementById('date');
+    const explanationEl = document.getElementById('explanation');
+    const copyrightEl = document.getElementById('copyright');
+
+    async function loadApod() {
+      status.textContent = 'Loading...';
+      apodCard.style.display = 'none';
+      try {
+        const response = await fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY');
+        const data = await response.json();
+        titleEl.textContent = data.title || 'No title';
+        dateEl.textContent = data.date ? new Date(data.date).toDateString() : '';
+        explanationEl.textContent = data.explanation || 'No explanation available.';
+        copyrightEl.textContent = data.copyright ? `© ${data.copyright}` : '';
+
+        mediaContainer.innerHTML = '';
+        if (data.media_type === 'image') {
+          const img = document.createElement('img');
+          img.src = data.url;
+          img.alt = data.title || 'NASA APOD image';
+          img.className = 'media';
+          mediaContainer.appendChild(img);
+        } else if (data.media_type === 'video') {
+          const iframe = document.createElement('iframe');
+          iframe.src = data.url;
+          iframe.className = 'media';
+          iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+          iframe.allowFullscreen = true;
+          mediaContainer.appendChild(iframe);
+        } else {
+          mediaContainer.textContent = 'Media type not supported.';
+        }
+
+        apodCard.style.display = 'block';
+        status.textContent = 'Loaded successfully.';
+      } catch (error) {
+        status.textContent = 'Failed to load APOD. Check your network or browser console.';
+        console.error(error);
+      }
+    }
+
+    button.addEventListener('click', loadApod);
+    loadApod();
+  </script>
+</body>
+</html>
